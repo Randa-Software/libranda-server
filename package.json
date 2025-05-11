@@ -1,0 +1,16 @@
+{
+    "name": "libranda-server",
+    "version": "0.1.0",
+    "main": "src/index.js",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "types": "index.d.ts",
+    "dependencies": {
+        "ws": "^8.18.2"
+    }
+}
