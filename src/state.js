@@ -1,8 +1,7 @@
 import { PluginManager } from "./plugins/PluginManager.js";
 import { EventManager } from "./events/EventManager.js";
-import { DEFAULT_PORT } from "./types.js";
 
-let _server_port = DEFAULT_PORT;
+let _server_port = 3000;
 let _http_public_dir = null;
 let _http_server = null;
 let _ws_server = null;

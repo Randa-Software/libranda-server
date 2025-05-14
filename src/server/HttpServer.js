@@ -1,10 +1,10 @@
 import http from "http";
 import fs from "fs/promises";
 import path from "path";
+import mime from "mime-types";
 
-import { MIME_TYPES } from "../types.js";
 import * as state from "../state.js";
-import { checkPathExists } from "libranda-server/src/utils.js";
+import { checkPathExists } from "../utils.js";
 
 const ERROR_PAGES = {
     403: {
@@ -82,46 +82,44 @@ export class HttpServer {
 
                 return;
             }
-
-            // Handle URL parameter
-            const url_parts = req.url.split("?");
-            let url_path = url_parts[0];
-            if (url_parts.length > 1) {
-                console.warn(
-                    `⚠️  Warning: URL parameters are not implemented (received: ${req.url})`,
-                );
-            }
-            let file_path = path.join(state.getHttpPublicDir(), url_path);
-
-            // check if path exists
-            if (!(await checkPathExists(file_path))) {
-                await this.sendErrorPage(res, 404);
-                return;
-            }
-
-            // check if path is directory
-            if ((await fs.stat(file_path)).isDirectory()) {
-                if (!url_path.endsWith("/")) {
-                    // Redirect to URL with trailing slash
-                    res.writeHead(301, {
-                        Location: req.url + "/",
-                    });
-                    res.end();
-                    return;
-                }
-                file_path = path.join(file_path, "index.html");
-                if (!(await checkPathExists(file_path))) {
-                    await this.sendErrorPage(res, 403);
-                    return;
-                }
-            }
-
             try {
-                const content = await fs.readFile(file_path);
-                const ext = path.extname(file_path).toLowerCase();
-                const contentType = MIME_TYPES[ext] || "text/plain";
+                // Handle URL parameter
+                const url_parts = req.url.split("?");
+                let url_path = url_parts[0];
+                if (url_parts.length > 1) {
+                    console.warn(
+                        `⚠️  Warning: URL parameters are not implemented (received: ${req.url})`,
+                    );
+                }
+                let file_path = path.join(state.getHttpPublicDir(), url_path);
 
-                res.writeHead(200, { "Content-Type": contentType });
+                // check if path exists
+                if (!(await checkPathExists(file_path))) {
+                    await this.sendErrorPage(res, 404);
+                    return;
+                }
+
+                // check if path is directory
+                if ((await fs.stat(file_path)).isDirectory()) {
+                    if (!url_path.endsWith("/")) {
+                        // Redirect to URL with trailing slash
+                        res.writeHead(301, {
+                            Location: req.url + "/",
+                        });
+                        res.end();
+                        return;
+                    }
+                    file_path = path.join(file_path, "index.html");
+                    if (!(await checkPathExists(file_path))) {
+                        await this.sendErrorPage(res, 403);
+                        return;
+                    }
+                }
+
+                const content = await fs.readFile(file_path);
+                const content_type = mime.lookup(file_path);
+
+                res.writeHead(200, { "Content-Type": content_type });
                 res.end(content);
             } catch (e) {
                 console.error(e);

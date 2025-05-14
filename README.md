@@ -2,7 +2,7 @@
 
 A robust WebSocket and HTTP server library for building real-time applications and services.
 
-[📚 View Full Documentation](./docs.md) | [🚀 View Examples](https://github.com/Randa-Software/libranda-examples)
+[📚 View Full Documentation](./docs.md) | [🚀 View Examples](https://github.com/Randa-Software/libranda-examples) | [💻 View Client](https://github.com/Randa-Software/libranda-client)
 
 ## Features
 
