@@ -4,9 +4,67 @@ import path from "path";
 import { MIME_TYPES } from "../types.js";
 import * as state from "../state.js";
 
+const ERROR_PAGES = {
+    403: {
+        title: "403 Forbidden",
+        message: "Directory listing is not allowed.",
+    },
+    404: {
+        title: "404 Not Found",
+        message: "The requested resource could not be found on this server.",
+    },
+    500: {
+        title: "500 Internal Server Error",
+        message: "An internal server error occurred.",
+    },
+};
+
 export class HttpServer {
     constructor() {
         this.server = null;
+    }
+
+    /**
+     * Send an error page response
+     * @param {http.ServerResponse} res Response object
+     * @param {number} statusCode HTTP status code
+     * @returns {Promise<void>}
+     */
+    async sendErrorPage(res, statusCode) {
+        try {
+            // Try to load custom error page
+            const errorFile = path.join(
+                state.getHttpPublicDir(),
+                `${statusCode}.html`,
+            );
+            const content = await fs.readFile(errorFile);
+            res.writeHead(statusCode, { "Content-Type": "text/html" });
+            res.end(content);
+        } catch (err) {
+            // Fall back to default error page
+            const errorInfo = ERROR_PAGES[statusCode] || ERROR_PAGES[500];
+            const html = `<!DOCTYPE html>
+<html>
+<head>
+    <title>${errorInfo.title}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 { color: #444; }
+        p { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>${errorInfo.title}</h1>
+    <p>${errorInfo.message}</p>
+</body>
+</html>`;
+            res.writeHead(statusCode, { "Content-Type": "text/html" });
+            res.end(html);
+        }
     }
 
     /**
@@ -21,8 +79,66 @@ export class HttpServer {
                 return;
             }
 
-            const reqPath = req.url === "/" ? "/index.html" : req.url;
-            const fullPath = path.join(state.getHttpPublicDir(), reqPath);
+            // Handle URL parameters by removing them
+            const urlParts = req.url.split("?");
+            let reqPath = urlParts[0];
+            if (urlParts.length > 1) {
+                console.warn(
+                    `⚠️  Warning: URL parameters are not implemented (received: ${req.url})`,
+                );
+            }
+            let fullPath = path.join(state.getHttpPublicDir(), reqPath);
+
+            try {
+                // First try the exact path
+                await fs.access(fullPath);
+                const stats = await fs.stat(fullPath);
+
+                if (stats.isDirectory()) {
+                    // If it's a directory, look for index.html
+                    const indexPath = path.join(fullPath, "index.html");
+                    try {
+                        await fs.access(indexPath);
+                        reqPath = path.join(reqPath, "index.html");
+                        fullPath = indexPath;
+                    } catch (indexErr) {
+                        await this.sendErrorPage(res, 403);
+                        return;
+                    }
+                }
+            } catch (err) {
+                // If the exact path doesn't exist, try with /index.html
+                const possibleDirPath = path.join(
+                    state.getHttpPublicDir(),
+                    reqPath,
+                    "index.html",
+                );
+                try {
+                    await fs.access(possibleDirPath);
+                    // If index.html exists, use it
+                    reqPath = path.join(reqPath, "index.html");
+                    fullPath = possibleDirPath;
+                } catch (dirErr) {
+                    // Check if the original path is a directory
+                    const originalPath = path.join(
+                        state.getHttpPublicDir(),
+                        reqPath,
+                    );
+                    try {
+                        const stats = await fs.stat(originalPath);
+                        if (stats.isDirectory()) {
+                            await this.sendErrorPage(res, 403);
+                            return;
+                        }
+                    } catch {
+                        // Not a directory, return 404
+                        await this.sendErrorPage(res, 404);
+                        return;
+                    }
+                    await this.sendErrorPage(res, 404);
+                    return;
+                }
+            }
 
             try {
                 const content = await fs.readFile(fullPath);
@@ -32,8 +148,7 @@ export class HttpServer {
                 res.writeHead(200, { "Content-Type": contentType });
                 res.end(content);
             } catch (err) {
-                res.writeHead(404);
-                res.end("Not Found");
+                await this.sendErrorPage(res, 500);
             }
         });
 

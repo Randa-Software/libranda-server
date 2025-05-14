@@ -1,11 +1,8 @@
 {
     "name": "libranda-server",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "main": "src/index.js",
     "type": "module",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
     "author": "MVDW-Java",
     "license": "AGPL-3.0-only",
     "description": "A library to create a server for your service",
