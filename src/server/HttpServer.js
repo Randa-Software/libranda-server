@@ -1,8 +1,10 @@
 import http from "http";
 import fs from "fs/promises";
 import path from "path";
+
 import { MIME_TYPES } from "../types.js";
 import * as state from "../state.js";
+import { checkPathExists } from "libranda-server/src/utils.js";
 
 const ERROR_PAGES = {
     403: {
@@ -73,81 +75,56 @@ export class HttpServer {
      */
     createServer() {
         this.server = http.createServer(async (req, res) => {
+            // check if the http public dir has been set.
             if (!state.getHttpPublicDir()) {
-                res.writeHead(404);
-                res.end("The public dir has not been set.");
+                console.error("The public dir has not been set.");
+                await this.sendErrorPage(res, 500);
+
                 return;
             }
 
-            // Handle URL parameters by removing them
-            const urlParts = req.url.split("?");
-            let reqPath = urlParts[0];
-            if (urlParts.length > 1) {
+            // Handle URL parameter
+            const url_parts = req.url.split("?");
+            let url_path = url_parts[0];
+            if (url_parts.length > 1) {
                 console.warn(
                     `⚠️  Warning: URL parameters are not implemented (received: ${req.url})`,
                 );
             }
-            let fullPath = path.join(state.getHttpPublicDir(), reqPath);
+            let file_path = path.join(state.getHttpPublicDir(), url_path);
 
-            try {
-                // First try the exact path
-                await fs.access(fullPath);
-                const stats = await fs.stat(fullPath);
+            // check if path exists
+            if (!(await checkPathExists(file_path))) {
+                await this.sendErrorPage(res, 404);
+                return;
+            }
 
-                if (stats.isDirectory()) {
-                    // If it's a directory, look for index.html
-                    const indexPath = path.join(fullPath, "index.html");
-                    try {
-                        await fs.access(indexPath);
-                        reqPath = path.join(reqPath, "index.html");
-                        fullPath = indexPath;
-                    } catch (indexErr) {
-                        await this.sendErrorPage(res, 403);
-                        return;
-                    }
+            // check if path is directory
+            if ((await fs.stat(file_path)).isDirectory()) {
+                if (!url_path.endsWith("/")) {
+                    // Redirect to URL with trailing slash
+                    res.writeHead(301, {
+                        Location: req.url + "/",
+                    });
+                    res.end();
+                    return;
                 }
-            } catch (err) {
-                // If the exact path doesn't exist, try with /index.html
-                const possibleDirPath = path.join(
-                    state.getHttpPublicDir(),
-                    reqPath,
-                    "index.html",
-                );
-                try {
-                    await fs.access(possibleDirPath);
-                    // If index.html exists, use it
-                    reqPath = path.join(reqPath, "index.html");
-                    fullPath = possibleDirPath;
-                } catch (dirErr) {
-                    // Check if the original path is a directory
-                    const originalPath = path.join(
-                        state.getHttpPublicDir(),
-                        reqPath,
-                    );
-                    try {
-                        const stats = await fs.stat(originalPath);
-                        if (stats.isDirectory()) {
-                            await this.sendErrorPage(res, 403);
-                            return;
-                        }
-                    } catch {
-                        // Not a directory, return 404
-                        await this.sendErrorPage(res, 404);
-                        return;
-                    }
-                    await this.sendErrorPage(res, 404);
+                file_path = path.join(file_path, "index.html");
+                if (!(await checkPathExists(file_path))) {
+                    await this.sendErrorPage(res, 403);
                     return;
                 }
             }
 
             try {
-                const content = await fs.readFile(fullPath);
-                const ext = path.extname(fullPath).toLowerCase();
+                const content = await fs.readFile(file_path);
+                const ext = path.extname(file_path).toLowerCase();
                 const contentType = MIME_TYPES[ext] || "text/plain";
 
                 res.writeHead(200, { "Content-Type": contentType });
                 res.end(content);
-            } catch (err) {
+            } catch (e) {
+                console.error(e);
                 await this.sendErrorPage(res, 500);
             }
         });
