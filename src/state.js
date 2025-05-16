@@ -5,6 +5,7 @@ let _server_port = 3000;
 let _http_public_dir = null;
 let _http_server = null;
 let _ws_server = null;
+let _cli = null;
 let _plugin_manager = new PluginManager();
 let _event_manager = new EventManager();
 
@@ -38,6 +39,14 @@ export function getWsServer() {
 
 export function setWsServer(server) {
     _ws_server = server;
+}
+
+export function getCli() {
+    return _cli;
+}
+
+export function setCli(new_cli) {
+    _cli = new_cli;
 }
 
 export function getPluginManager() {

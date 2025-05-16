@@ -2,6 +2,7 @@ import { HttpServer } from "./server/HttpServer.js";
 import { WebSocketServer } from "./server/WebSocketServer.js";
 import { PluginManager } from "./plugins/PluginManager.js";
 import { EventManager } from "./events/EventManager.js";
+import { CommandLine } from "./cli/CommandLine.js";
 import * as state from "./state.js";
 
 export async function setServicePort(port) {
@@ -88,6 +89,11 @@ export async function startService() {
     // Initialize all components
     state.setHttpServer(new HttpServer());
     state.setWsServer(new WebSocketServer());
+    
+    // Start CLI interface
+    const cli = new CommandLine();
+    state.setCli(cli);
+    cli.start();
 
     // Start the HTTP server
     await state.getHttpServer().start();
@@ -104,10 +110,12 @@ export async function stopService() {
     await state.getHttpServer().stop();
     state.getPluginManager().cleanup();
     state.getEventManager().clear();
+    state.getCli()?.stop();
 
     // Reset all instances
     state.setWsServer(null);
     state.setHttpServer(null);
     state.setPluginManager(new PluginManager());
     state.setEventManager(new EventManager());
+    state.setCli(null);
 }
