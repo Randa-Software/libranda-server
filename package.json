@@ -1,14 +1,32 @@
 {
     "name": "libranda-server",
-    "version": "0.2.0",
-    "main": "src/index.js",
-    "type": "module",
-    "author": "MVDW-Java",
-    "license": "AGPL-3.0-only",
+    "version": "0.2.1",
     "description": "A library to create a server for your service",
-    "types": "index.d.ts",
+    "main": "src/index.js",
+    "types": "src/index.d.ts",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
     "dependencies": {
         "mime-types": "^3.0.1",
         "ws": "^8.18.2"
-    }
+    },
+    "peerDependencies": {
+        "ws": "^8.18.2"
+    },
+    "exports": {
+        ".": "./src/index.js"
+    },
+    "engines": {
+        "node": ">=14.0.0"
+    },
+    "keywords": [
+        "websocket",
+        "http",
+        "server",
+        "node"
+    ],
+    "author": "MVDW-Java",
+    "license": "AGPL-3.0-only"
 }
