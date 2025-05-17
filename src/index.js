@@ -72,6 +72,9 @@ export function registerPlugin(plugin) {
             state.getWsServer().setClientMetadata(clientId, metadata),
         getConnectedClientIds: () => state.getWsServer().getClientIds(),
         getConnectedClients: () => state.getWsServer().getConnectedClients(),
+        getPluginType: () => {
+            return "server";
+        },
     };
 
     return state.getPluginManager().registerPlugin(plugin, plugin_api);
@@ -89,7 +92,7 @@ export async function startService() {
     // Initialize all components
     state.setHttpServer(new HttpServer());
     state.setWsServer(new WebSocketServer());
-    
+
     // Start CLI interface
     const cli = new CommandLine();
     state.setCli(cli);

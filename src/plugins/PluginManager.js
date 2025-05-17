@@ -1,4 +1,4 @@
-import { EventManager } from '../events/EventManager.js';
+import { EventManager } from "../events/EventManager.js";
 
 export class PluginManager {
     constructor() {
@@ -22,17 +22,19 @@ export class PluginManager {
      */
     registerPlugin(plugin, api) {
         if (!plugin.id) {
-            throw new Error('Plugin must have an id property');
+            throw new Error("Plugin must have an id property");
         }
         if (this.plugins.has(plugin.id)) {
-            throw new Error(`Plugin with id ${plugin.id} is already registered`);
+            throw new Error(
+                `Plugin with id ${plugin.id} is already registered`,
+            );
         }
-        
+
         this.plugins.set(plugin.id, plugin);
-        if (typeof plugin.initialize === 'function') {
+        if (typeof plugin.initialize === "function") {
             plugin.initialize(api);
         }
-        
+
         return () => this.unregisterPlugin(plugin.id);
     }
 
@@ -43,7 +45,7 @@ export class PluginManager {
     unregisterPlugin(pluginId) {
         const plugin = this.plugins.get(pluginId);
         if (plugin) {
-            if (typeof plugin.cleanup === 'function') {
+            if (typeof plugin.cleanup === "function") {
                 try {
                     plugin.cleanup();
                 } catch (err) {
