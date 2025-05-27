@@ -43,8 +43,8 @@ export class EventManager {
         const eventCallbacks = namespaceHandlers.get(event);
         if (!eventCallbacks) return;
 
-        const { clientId, metadata, ...cleanData } = data;
-        const clientInfo = { id: clientId, metadata: metadata };
+        const { clientId, metadata, ip, ...cleanData } = data;
+        const clientInfo = { id: clientId, metadata: metadata, ip: ip };
 
         for (const callback of eventCallbacks) {
             try {
