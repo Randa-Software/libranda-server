@@ -47,6 +47,26 @@ export function setClientMetadata(clientId, metadata) {
     }
 }
 
+export function registerHttpHook(method, path, handler) {
+    const hooks = state.getHttpHooks();
+    method = method.toLowerCase();
+
+    if (!hooks.has(method)) {
+        hooks.set(method, new Map());
+    }
+
+    const methodHooks = hooks.get(method);
+    methodHooks.set(path, handler);
+
+    // Return unregister function
+    return () => {
+        const methodHooks = hooks.get(method);
+        if (methodHooks) {
+            methodHooks.delete(path);
+        }
+    };
+}
+
 export function registerEvent(namespace, event, callback) {
     return state.getEventManager()
         ? state.getEventManager().registerEvent(namespace, event, callback)

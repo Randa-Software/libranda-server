@@ -8,6 +8,7 @@ let _ws_server = null;
 let _cli = null;
 let _plugin_manager = new PluginManager();
 let _event_manager = new EventManager();
+let _http_hooks = new Map();
 
 export function getServerPort() {
     return _server_port;
@@ -63,4 +64,8 @@ export function getEventManager() {
 
 export function setEventManager(manager) {
     _event_manager = manager;
+}
+
+export function getHttpHooks() {
+    return _http_hooks;
 }

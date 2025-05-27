@@ -86,6 +86,23 @@ export class HttpServer {
                 // Handle URL parameter
                 const url_parts = req.url.split("?");
                 let url_path = url_parts[0];
+
+                // Check for registered hooks
+                const hooks = state.getHttpHooks();
+                const method = req.method.toLowerCase();
+                const methodHooks = hooks.get(method);
+
+                if (methodHooks && methodHooks.has(url_path)) {
+                    try {
+                        await methodHooks.get(url_path)(req, res);
+                        return;
+                    } catch (error) {
+                        console.error("Error in HTTP hook:", error);
+                        await this.sendErrorPage(res, 500);
+                        return;
+                    }
+                }
+
                 if (url_parts.length > 1) {
                     console.warn(
                         `⚠️  Warning: URL parameters are not implemented (received: ${req.url})`,
