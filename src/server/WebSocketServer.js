@@ -50,7 +50,7 @@ export class WebSocketServer {
      * Set up WebSocket event handlers
      */
     setupEventHandlers() {
-        this.wss.on("connection", (ws) => {
+        this.wss.on("connection", (ws, req) => {
             const clientId = randomUUID();
             ws.isAlive = true; // Initialize the isAlive flag
 
@@ -60,6 +60,12 @@ export class WebSocketServer {
             });
 
             this.clients.set(clientId, { ws, metadata: {} });
+            const clientIp =
+                req.socket.remoteAddress ||
+                req.connection.remoteAddress ||
+                req.headers["x-forwarded-for"]?.split(",")[0] ||
+                "unknown";
+            this.clients.set(clientId, { ws, metadata: {}, ip: clientIp });
 
             // Send the client their ID
             this.sendToClient(clientId, {
@@ -75,10 +81,12 @@ export class WebSocketServer {
                     );
 
                     // Augment the event data with client information
+                    const client = this.clients.get(clientId);
                     const augmentedData = {
                         ...data,
                         clientId: clientId,
-                        metadata: this.clients.get(clientId)?.metadata,
+                        metadata: client?.metadata,
+                        ip: client?.ip,
                     };
 
                     state
@@ -147,6 +155,15 @@ export class WebSocketServer {
      */
     getClientMetadata(clientId) {
         return this.clients.get(clientId)?.metadata || {};
+    }
+
+    /**
+     * Get IP address for a specific client
+     * @param {string} clientId - Client ID
+     * @returns {string} Client IP address
+     */
+    getClientIp(clientId) {
+        return this.clients.get(clientId)?.ip || "unknown";
     }
 
     /**
