@@ -6,6 +6,9 @@ export class WebSocketServer {
     constructor() {
         this.wss = null;
         this.clients = new Map(); // clientId -> { ws, metadata }
+        this.heartbeatInterval = null;
+        this.HEARTBEAT_INTERVAL = 30000; // 30 seconds
+        this.HEARTBEAT_TIMEOUT = 60000;  // 60 seconds - time to wait for pong
     }
 
     /**
@@ -15,6 +18,32 @@ export class WebSocketServer {
     initialize(httpServer) {
         this.wss = new WS({ server: httpServer });
         this.setupEventHandlers();
+        this.startHeartbeat();
+    }
+
+    startHeartbeat() {
+        // Clear any existing interval
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+        }
+
+        this.heartbeatInterval = setInterval(() => {
+            this.clients.forEach((client, clientId) => {
+                if (client.ws.isAlive === false) {
+                    console.log(`Client ${clientId} failed heartbeat, terminating connection`);
+                    client.ws.terminate();
+                    return;
+                }
+
+                client.ws.isAlive = false;
+                try {
+                    client.ws.ping();
+                } catch (err) {
+                    console.error(`Error sending ping to client ${clientId}:`, err);
+                    client.ws.terminate();
+                }
+            });
+        }, this.HEARTBEAT_INTERVAL);
     }
 
     /**
@@ -23,6 +52,13 @@ export class WebSocketServer {
     setupEventHandlers() {
         this.wss.on("connection", (ws) => {
             const clientId = randomUUID();
+            ws.isAlive = true; // Initialize the isAlive flag
+
+            // Set up pong handler
+            ws.on("pong", () => {
+                ws.isAlive = true;
+            });
+
             this.clients.set(clientId, { ws, metadata: {} });
 
             // Send the client their ID
@@ -184,6 +220,12 @@ export class WebSocketServer {
      */
     close() {
         if (this.wss) {
+            // Clear the heartbeat interval
+            if (this.heartbeatInterval) {
+                clearInterval(this.heartbeatInterval);
+                this.heartbeatInterval = null;
+            }
+
             for (const [_, client] of this.clients) {
                 client.ws.terminate();
             }
