@@ -1,6 +1,6 @@
 {
     "name": "libranda-server",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "A library to create a server for your service",
     "main": "src/index.js",
     "types": "src/index.d.ts",
