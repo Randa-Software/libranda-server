@@ -2,6 +2,7 @@ import { PluginManager } from "./plugins/PluginManager.js";
 import { EventManager } from "./events/EventManager.js";
 
 let _server_port = 3000;
+let _server_host = "localhost";
 let _http_public_dir = null;
 let _http_server = null;
 let _ws_server = null;
@@ -16,6 +17,14 @@ export function getServerPort() {
 
 export function setServerPort(port) {
     _server_port = port;
+}
+
+export function getServerHost() {
+    return _server_host;
+}
+
+export function setServerHost(host) {
+    _server_host = host;
 }
 
 export function getHttpPublicDir() {

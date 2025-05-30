@@ -157,12 +157,16 @@ export class HttpServer {
         }
 
         return new Promise((resolve) => {
-            this.server.listen(state.getServerPort(), () => {
-                console.log(
-                    `✅ HTTP Server running at http://localhost:${state.getServerPort()}`,
-                );
-                resolve();
-            });
+            this.server.listen(
+                state.getServerPort(),
+                state.getServerHost(),
+                () => {
+                    console.log(
+                        `✅ HTTP Server running at http://${state.getServerHost()}:${state.getServerPort()}`,
+                    );
+                    resolve();
+                },
+            );
         });
     }
 

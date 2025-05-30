@@ -17,6 +17,18 @@ export function getServicePort() {
     return state.getServerPort();
 }
 
+export async function setServiceHost(host) {
+    if (state.getHttpServer()) {
+        console.warn("Can't change host when the server is already running.");
+        return false;
+    }
+    state.setServerHost(host);
+}
+
+export function getServiceHost() {
+    return state.getServerHost();
+}
+
 export function setHttpPublicDir(dir) {
     state.setHttpPublicDir(dir);
 }
