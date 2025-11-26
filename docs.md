@@ -28,6 +28,13 @@ setHttpPublicDir(dir: string): void
 ```
 Configures the directory for serving static files through the HTTP server.
 
+#### Serve Single Page Application (SPA)
+```typescript
+setHttpPublicSinglePage(bool: boolean): void
+```
+Configures the HTTP server to serve a single page application. If set to `true`, all routes will redirect to the index file, typically used for SPAs.
+
+
 ### Event System
 
 #### Event Registration

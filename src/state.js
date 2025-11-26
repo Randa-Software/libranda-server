@@ -4,6 +4,7 @@ import { EventManager } from "./events/EventManager.js";
 let _server_port = 3000;
 let _server_host = "localhost";
 let _http_public_dir = null;
+let _http_public_single_page = false;
 let _http_server = null;
 let _ws_server = null;
 let _cli = null;
@@ -33,6 +34,14 @@ export function getHttpPublicDir() {
 
 export function setHttpPublicDir(dir) {
     _http_public_dir = dir;
+}
+
+export function getHttpPublicSinglePage() {
+    return _http_public_single_page;
+}
+
+export function setHttpPublicSinglePage(bool) {
+    _http_public_single_page = bool;
 }
 
 export function getHttpServer() {

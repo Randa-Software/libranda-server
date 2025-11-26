@@ -103,15 +103,27 @@ export class HttpServer {
                     }
                 }
 
-                if (url_parts.length > 1) {
-                    console.warn(
-                        `⚠️  Warning: URL parameters are not implemented (received: ${req.url})`,
-                    );
-                }
                 let file_path = path.join(state.getHttpPublicDir(), url_path);
 
                 // check if path exists
                 if (!(await checkPathExists(file_path))) {
+                    // Check for single page app mode
+                    if (state.getHttpPublicSinglePage()) {
+                        file_path = path.join(
+                            state.getHttpPublicDir(),
+                            "index.html",
+                        );
+                        if (await checkPathExists(file_path)) {
+                            const content = await fs.readFile(file_path);
+                            const content_type = mime.lookup(file_path);
+
+                            res.writeHead(200, {
+                                "Content-Type": content_type,
+                            });
+                            res.end(content);
+                            return;
+                        }
+                    }
                     await this.sendErrorPage(res, 404);
                     return;
                 }

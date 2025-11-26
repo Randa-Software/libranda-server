@@ -33,6 +33,10 @@ export function setHttpPublicDir(dir) {
     state.setHttpPublicDir(dir);
 }
 
+export function setHttpPublicSinglePage(bool) {
+    state.setHttpPublicSinglePage(bool);
+}
+
 export function getConnectedClients() {
     return state.getWsServer()?.getConnectedClients() ?? 0;
 }
