@@ -1,7 +1,7 @@
 import { HttpServer } from "./server/HttpServer.js";
 import { WebSocketServer } from "./server/WebSocketServer.js";
-import { PluginManager } from "./plugins/PluginManager.js";
-import { EventManager } from "./events/EventManager.js";
+import { PluginManager } from "./managers/PluginManager.js";
+import { EventManager } from "./managers/EventManager.js";
 import { CommandLine } from "./cli/CommandLine.js";
 import * as state from "./state.js";
 
@@ -86,6 +86,11 @@ export function registerHttpHook(method, path, handler) {
 export function registerEvent(namespace, event, callback) {
     return state.getEventManager()
         ? state.getEventManager().registerEvent(namespace, event, callback)
+        : () => {};
+}
+export function registerReply(namespace, event, callback) {
+    return state.getReplyManager()
+        ? state.getReplyManager().registerReply(namespace, event, callback)
         : () => {};
 }
 

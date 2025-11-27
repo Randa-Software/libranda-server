@@ -76,22 +76,30 @@ export class WebSocketServer {
 
             ws.on("message", (message) => {
                 try {
-                    const { namespace, event, data } = JSON.parse(
-                        message.toString(),
-                    );
+                    const parsedMessage = JSON.parse(message.toString());
+                    const { namespace, event, data, reply_id } = parsedMessage;
 
                     // Augment the event data with client information
                     const client = this.clients.get(clientId);
-                    const augmentedData = {
+                    let augmentedData = {
                         ...data,
                         clientId: clientId,
                         metadata: client?.metadata,
                         ip: client?.ip,
                     };
 
-                    state
-                        .getEventManager()
-                        .handleEvent(namespace, event, augmentedData);
+                    if (reply_id) {
+                        // Use ReplyManager for messages with reply_id
+                        augmentedData.reply_id = reply_id;
+                        this.emitEvent(clientId, namespace, event, state
+                            .getReplyManager()
+                            .handleReply(namespace, event, augmentedData), reply_id);
+                    } else {
+                        // Use EventManager for regular events
+                        state
+                            .getEventManager()
+                            .handleEvent(namespace, event, augmentedData);
+                    }
                 } catch (err) {
                     console.error("Failed to parse WebSocket message:", err);
                 }
@@ -198,11 +206,13 @@ export class WebSocketServer {
      * @param {string} event - Event name
      * @param {any} data - Event data
      */
-    emitEvent(clientIds, namespace, event, data) {
+    emitEvent(clientIds, namespace, event, data, reply_id = null) {
+        console.log(`Emitting event ${event} to ${clientIds}, ${reply_id}`);
         const message = {
             namespace,
             event,
             data,
+            ...(reply_id !== null && { reply_id })
         };
 
         if (clientIds === "*") {

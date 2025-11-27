@@ -1,4 +1,4 @@
-import { EventManager } from "../events/EventManager.js";
+import { EventManager } from "./EventManager.js";
 
 export class PluginManager {
     constructor() {

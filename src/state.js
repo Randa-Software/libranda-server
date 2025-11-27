@@ -1,5 +1,6 @@
-import { PluginManager } from "./plugins/PluginManager.js";
-import { EventManager } from "./events/EventManager.js";
+import { PluginManager } from "./managers/PluginManager.js";
+import { EventManager } from "./managers/EventManager.js";
+import { ReplyManager } from "./managers/ReplyManager.js";
 
 let _server_port = 3000;
 let _server_host = "localhost";
@@ -10,6 +11,7 @@ let _ws_server = null;
 let _cli = null;
 let _plugin_manager = new PluginManager();
 let _event_manager = new EventManager();
+let _reply_manager = new ReplyManager();
 let _http_hooks = new Map();
 
 export function getServerPort() {
@@ -82,6 +84,14 @@ export function getEventManager() {
 
 export function setEventManager(manager) {
     _event_manager = manager;
+}
+
+export function getReplyManager() {
+    return _reply_manager;
+}
+
+export function setReplyManager(manager) {
+    _reply_manager = manager;
 }
 
 export function getHttpHooks() {
